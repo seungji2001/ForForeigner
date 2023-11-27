@@ -15,6 +15,8 @@ android {
     defaultConfig {
         android.buildFeatures.buildConfig=true
         buildConfigField("String","AI_API_KEY","\"${properties.getProperty("ai_api_key")}\"")
+        buildConfigField("String","NAVER_CLIENT_ID","\"${properties.getProperty("naver_client_id")}\"")
+        buildConfigField("String","NAVER_SECRET_KEY","\"${properties.getProperty("naver_secret_key")}\"")
 
         applicationId = "com.example.forforeiner"
         minSdk = 24
