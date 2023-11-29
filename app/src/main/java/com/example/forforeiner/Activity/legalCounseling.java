@@ -21,6 +21,7 @@ public class legalCounseling extends AppCompatActivity {
         startActivity(intent);
     }
     public void findButton(View view){
-
+        Intent intent = new Intent(getApplicationContext(), nearLawCenter.class);
+        startActivity(intent);
     }
 }

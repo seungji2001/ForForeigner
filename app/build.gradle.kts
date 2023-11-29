@@ -12,11 +12,15 @@ android {
     namespace = "com.example.forforeiner"
     compileSdk = 34
 
+
     defaultConfig {
         android.buildFeatures.buildConfig=true
         buildConfigField("String","AI_API_KEY","\"${properties.getProperty("ai_api_key")}\"")
         buildConfigField("String","NAVER_CLIENT_ID","\"${properties.getProperty("naver_client_id")}\"")
         buildConfigField("String","NAVER_SECRET_KEY","\"${properties.getProperty("naver_secret_key")}\"")
+        buildConfigField("String","GOOGLE_API_KEY","\"${properties.getProperty("google_api_key")}\"")
+
+        manifestPlaceholders["GOOGLE_API_KEY"] = "\"${properties.getProperty("google_api_key")}\""
 
         applicationId = "com.example.forforeiner"
         minSdk = 24
@@ -50,7 +54,14 @@ dependencies {
     implementation("androidx.appcompat:appcompat:1.6.1")
     implementation("com.google.android.material:material:1.8.0")
     implementation("androidx.constraintlayout:constraintlayout:2.1.4")
+    implementation("com.google.android.gms:play-services-maps:18.2.0")
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
+    implementation ("androidx.appcompat:appcompat:1.5.1")
+    implementation ("com.google.android.material:material:1.7.0")
+    implementation ("androidx.constraintlayout:constraintlayout:2.1.4")
+    implementation ("com.google.android.gms:play-services-location:21.0.1")
+    implementation ("com.google.android.gms:play-services-maps:18.1.0")
+    implementation ("com.google.android.libraries.places:places:3.0.0")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
 }
