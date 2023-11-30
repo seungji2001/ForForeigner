@@ -19,8 +19,9 @@ android {
         buildConfigField("String","NAVER_CLIENT_ID","\"${properties.getProperty("naver_client_id")}\"")
         buildConfigField("String","NAVER_SECRET_KEY","\"${properties.getProperty("naver_secret_key")}\"")
         buildConfigField("String","GOOGLE_API_KEY","\"${properties.getProperty("google_api_key")}\"")
+        buildConfigField("String","NAVER_NATIVE_KEY","\"${properties.getProperty("naver_native_key")}\"")
 
-        manifestPlaceholders["GOOGLE_API_KEY"] = "\"${properties.getProperty("google_api_key")}\""
+        manifestPlaceholders["NAVER_NATIVE_KEY"] = "${properties.getProperty("naver_native_key")}"
 
         applicationId = "com.example.forforeiner"
         minSdk = 24
@@ -44,6 +45,7 @@ android {
 }
 
 dependencies {
+    implementation ("com.kakao.maps.open:android:2.6.0")
     implementation("com.squareup.retrofit2:converter-scalars:2.1.0")
     implementation ("com.google.code.gson:gson:2.8.7")
     implementation ("com.squareup.retrofit2:converter-gson:2.9.0")
