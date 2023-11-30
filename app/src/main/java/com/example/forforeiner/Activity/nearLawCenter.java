@@ -29,6 +29,10 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.kakao.vectormap.KakaoMap;
+import com.kakao.vectormap.KakaoMapReadyCallback;
+import com.kakao.vectormap.MapLifeCycleCallback;
+import com.kakao.vectormap.MapView;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -50,16 +54,7 @@ import retrofit2.Response;
 public class nearLawCenter extends AppCompatActivity {
 
     private EditText et;
-
-    private MapRetrofitClient mapRetrofitClient;
-    private MapRetrofitInterface mapRetrofitInterface;
-
-    GoogleMap gm;
-    Marker centerMarker;
-    Marker selectMarker;
-
     final int REQ_PERMISSION_CODE = 100;
-    FusedLocationProviderClient flpClient;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -68,34 +63,24 @@ public class nearLawCenter extends AppCompatActivity {
 
         et = findViewById(R.id.location);
 
-        checkPermission();
+        MapView mapView = findViewById(R.id.map_view);
+        mapView.start(new MapLifeCycleCallback() {
+            @Override
+            public void onMapDestroy() {
+                // 지도 API 가 정상적으로 종료될 때 호출됨
+            }
 
-        SupportMapFragment smf = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
-        smf.getMapAsync(mapReadyCallback);
-
-        flpClient = LocationServices.getFusedLocationProviderClient(this);
+            @Override
+            public void onMapError(Exception error) {
+                // 인증 실패 및 지도 사용 중 에러가 발생할 때 호출됨
+            }
+        }, new KakaoMapReadyCallback() {
+            @Override
+            public void onMapReady(KakaoMap kakaoMap) {
+                // 인증 후 API 가 정상적으로 실행될 때 호출됨
+            }
+        });
     }
-
-    OnMapReadyCallback mapReadyCallback = new OnMapReadyCallback() {
-        @Override
-        public void onMapReady(@NonNull GoogleMap googleMap) {
-            gm = googleMap;
-            checkPermission();
-            gm.setMyLocationEnabled(true);
-
-            LatLng currentLoc = new LatLng(37.606320, 127.041808);
-            gm.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLoc, 17));
-
-
-            MarkerOptions options = new MarkerOptions();
-            options.position(currentLoc);
-            options.icon(BitmapDescriptorFactory.defaultMarker());
-            options.title("현재 위치");
-            options.snippet("이동중");
-
-            centerMarker = gm.addMarker(options);
-        }
-    };
     private void checkPermission() {
         if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) ==
                 PackageManager.PERMISSION_GRANTED &&
@@ -113,35 +98,5 @@ public class nearLawCenter extends AppCompatActivity {
 
 
     public void findLocation(View view){
-        String location = et.getText().toString();
-
-        mapRetrofitClient = MapRetrofitClient.getInstance();
-        mapRetrofitInterface = MapRetrofitClient.getMapRetrofitInterface();
-
-        mapRetrofitInterface.geocoder(BuildConfig.GOOGLE_API_KEY, location).enqueue(new Callback<GeocoderDto>() {
-            @Override
-            public void onResponse(Call<GeocoderDto> call, Response<GeocoderDto> response) {
-                GeocoderDto result = response.body();
-                Log.d("retrofit", "Data fetch success");
-                double latitude = result.getResults().get(0).getGeometry().getLocation().getLat();
-                double longitude = result.getResults().get(0).getGeometry().getLocation().getLng();
-
-                LatLng currentLoc = new LatLng(latitude, longitude);
-                gm.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLoc, 20));
-
-                MarkerOptions options = new MarkerOptions();
-                options.position(currentLoc);
-                options.icon(BitmapDescriptorFactory.defaultMarker());
-                options.title("현재 위치");
-                options.snippet("이동중");
-
-                centerMarker = gm.addMarker(options);
-            }
-
-            @Override
-            public void onFailure(Call<GeocoderDto> call, Throwable t) {
-                Log.d("retrofit", t.getMessage());
-            }
-        });
     }
 }
