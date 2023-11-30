@@ -13,10 +13,12 @@ import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.Looper;
+import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import com.example.forforeiner.BuildConfig;
 import com.example.forforeiner.R;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
@@ -33,22 +35,34 @@ import com.kakao.vectormap.KakaoMapReadyCallback;
 import com.kakao.vectormap.LatLng;
 import com.kakao.vectormap.MapLifeCycleCallback;
 import com.kakao.vectormap.MapView;
+import com.kakao.vectormap.label.Label;
+import com.kakao.vectormap.label.LabelManager;
 
 import java.util.List;
 
+import Dto.MapGeocoderDto.ResponseDto.GeocoderDto;
+import Dto.TranslateDto.ResponseDto.ResponseTranslateDto;
+import Retrofit.MapRetrofitClient;
+import Retrofit.MapRetrofitInterface;
+import Retrofit.NaverRetrofitClient;
+import Retrofit.RetrofitClient;
+import Retrofit.RetrofitInterface;
 import dalvik.annotation.optimization.CriticalNative;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class nearLawCenter extends AppCompatActivity {
 
     private EditText et;
     final int REQ_PERMISSION_CODE = 100;
 
-    public static final String GPS_PROVIDER = "gps";
-    public static final String NETWORK_PROVIDER = "network";
-    public static final String PASSIVE_PROVIDER = "passive";
-
     FusedLocationProviderClient flpClient;
-    Location last_location;
+
+    private MapRetrofitClient mapRetrofitClient;
+    private MapRetrofitInterface mapRetrofitInterface;
+
+    private Label label;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -57,6 +71,10 @@ public class nearLawCenter extends AppCompatActivity {
 
         et = findViewById(R.id.location);
 
+        showFirstLocation();
+    }
+
+    private void showFirstLocation(){
         checkPermission();
         flpClient = LocationServices.getFusedLocationProviderClient(this);
         flpClient.requestLocationUpdates(
@@ -84,55 +102,10 @@ public class nearLawCenter extends AppCompatActivity {
         return locationRequest;
     }
 
-    private void getCurrentLocation(){
-        checkPermission();
-
-        LocationManager lm = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-        List<String> list = lm.getAllProviders();
-
-        for(int i = 0; i<list.size(); i++){
-            list.get(i);
-            lm.isProviderEnabled(list.get(i));
-        }
-
-        LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-
-        Criteria criteria = new Criteria();
-        criteria.setAccuracy(Criteria.ACCURACY_FINE);
-        criteria.setPowerRequirement(Criteria.POWER_HIGH);
-        criteria.setAltitudeRequired(false);
-        criteria.setSpeedRequired(true);
-        criteria.setCostAllowed(true);
-        criteria.setBearingRequired(false);
-
-        String bestProvide = locationManager.getBestProvider(criteria, true);
-
-        Location location = null;
-
-        //매니저를 이용하여 위치정보 얻어오기
-        if (locationManager.isProviderEnabled("gps")) {
-            location = locationManager.getLastKnownLocation("gps");
-        }else if (locationManager.isProviderEnabled("network")){
-            location = locationManager.getLastKnownLocation("network");
-            locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 3000L, (float) 10, (LocationListener) this);
-        }
-
-        if(location==null){
-            et.setText("못찾음");
-        }else{
-            //위도, 경도 얻어오기
-            double latitude=location.getLatitude();
-            double longitude=location.getLongitude();
-
-            System.out.println(latitude + " " + longitude);
-            getKakaoMap(latitude, longitude);
-            et.setText(latitude+" , "+longitude);
-        }
-    }
-
     private void getKakaoMap(double latitude, double longitude){
 
         MapView mapView = findViewById(R.id.map_view);
+//        mapView.setCurrentLocationTrackingMode(MapView.CurrentLocationTrackingMode.TrackingModeOnWithoutHeading);
         mapView.start(new MapLifeCycleCallback() {
             @Override
             public void onMapDestroy() {
@@ -148,7 +121,6 @@ public class nearLawCenter extends AppCompatActivity {
             @Override
             public void onMapReady(KakaoMap kakaoMap) {
                 // 인증 후 API 가 정상적으로 실행될 때 호출됨
-
             }
             @Override
             public LatLng getPosition() {
@@ -181,5 +153,84 @@ public class nearLawCenter extends AppCompatActivity {
 
 
     public void findLocation(View view){
+        String address = et.getText().toString();
+        getFindLocation(address);
     }
+
+    private void getFindLocation(String address){
+        mapRetrofitClient = MapRetrofitClient.getInstance();
+        mapRetrofitInterface = MapRetrofitClient.getMapRetrofitInterface();
+        mapRetrofitInterface.geocoder(BuildConfig.GOOGLE_API_KEY,address).enqueue(new Callback<GeocoderDto>() {
+            @Override
+            public void onResponse(Call<GeocoderDto> call, Response<GeocoderDto> response) {
+                GeocoderDto result = response.body();
+                Log.d("retrofit", "Data fetch success");
+                double lat = result.getResults().get(0).getGeometry().getLocation().getLat();
+                double lng = result.getResults().get(0).getGeometry().getLocation().getLng();
+
+                LatLng latLng = LatLng.from(lat, lng);
+
+//                label.moveTo(latLng);
+//                label.show();
+            }
+
+            @Override
+            public void onFailure(Call<GeocoderDto> call, Throwable t) {
+                Log.d("retrofit", t.getMessage());
+            }
+        });
+    }
+
+    public void currentLocation(View view){
+
+    }
+
+    class notUsingFunction {
+        private void getCurrentLocation(){
+            checkPermission();
+
+            LocationManager lm = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+            List<String> list = lm.getAllProviders();
+
+            for(int i = 0; i<list.size(); i++){
+                list.get(i);
+                lm.isProviderEnabled(list.get(i));
+            }
+
+            LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+
+            Criteria criteria = new Criteria();
+            criteria.setAccuracy(Criteria.ACCURACY_FINE);
+            criteria.setPowerRequirement(Criteria.POWER_HIGH);
+            criteria.setAltitudeRequired(false);
+            criteria.setSpeedRequired(true);
+            criteria.setCostAllowed(true);
+            criteria.setBearingRequired(false);
+
+            String bestProvide = locationManager.getBestProvider(criteria, true);
+
+            Location location = null;
+
+            //매니저를 이용하여 위치정보 얻어오기
+            if (locationManager.isProviderEnabled("gps")) {
+                location = locationManager.getLastKnownLocation("gps");
+            }else if (locationManager.isProviderEnabled("network")){
+                location = locationManager.getLastKnownLocation("network");
+                locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 3000L, (float) 10, (LocationListener) this);
+            }
+
+            if(location==null){
+                et.setText("못찾음");
+            }else{
+                //위도, 경도 얻어오기
+                double latitude=location.getLatitude();
+                double longitude=location.getLongitude();
+
+                System.out.println(latitude + " " + longitude);
+                getKakaoMap(latitude, longitude);
+                et.setText(latitude+" , "+longitude);
+            }
+        }
+    }
+
 }

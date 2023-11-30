@@ -17,19 +17,26 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
         <EditText
-            android:layout_weight="1"
+            android:layout_weight="4"
             android:id="@+id/location"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="location"/>
 
         <Button
-            android:layout_weight="1"
+            android:layout_weight="5"
             android:id="@+id/findLocation"
             android:onClick="findLocation"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="location" />
+            android:text="search" />
+        <Button
+            android:layout_weight="4"
+            android:id="@+id/currentLocation"
+            android:onClick="currentLocation"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="current location" />
     </LinearLayout>
 
     <com.kakao.vectormap.MapView
